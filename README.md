@@ -1,7 +1,7 @@
 # TC4000.1 | Inteligent Systems. Titanic Homework
 
 This repository contains the titanic assignment for the postgraduate-level
-course *TC4000.1 Inteligent Systems* taught at Tecnológico de Monterrey Campus
+course *IA4000.1 Inteligent Systems* taught at Tecnológico de Monterrey Campus
 Guadalajara by Ph.D. Luis Eduardo Falcón Morales.
 
 ### Prerequisites ###
