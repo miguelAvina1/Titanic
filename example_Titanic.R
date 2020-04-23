@@ -1,7 +1,7 @@
 
-# Titanic --- datos categóricos y numéricos
+# Titanic --- datos categ?ricos y num?ricos
 
-mydata <- read.csv("G:/Mi unidad/data/titanic.csv", 
+mydata <- read.csv("data/titanic.csv", 
                    header=TRUE, 
                    sep=',', 
                    stringsAsFactors=TRUE)
@@ -12,7 +12,7 @@ head(mydata)
 # Eliminamos la variable de nombres:
 mydata <- mydata[-3]
 
-# Verificar las variables categóricas:
+# Verificar las variables categ?ricas:
 mydata$Survived <- ifelse(mydata$Survived==0, "Surv", "NotSurv")
 mydata$Survived <- as.factor(mydata$Survived)
 
@@ -21,7 +21,7 @@ mydata$Pclass <- as.factor(mydata$Pclass)
 # Verificamos el porcentaje de cada clase:
 prop.table(table(mydata$Survived))
 
-# verificar si los niveles de cada factor categórico tienen al menos un 10% de datos:
+# verificar si los niveles de cada factor categ?rico tienen al menos un 10% de datos:
 prop.table(table(mydata$Pclass))
 prop.table(table(mydata$Sex))
 prop.table(table(mydata$Siblings.Spouses.Aboard))
@@ -31,7 +31,7 @@ mydata$Siblings.Spouses.Aboard <- as.integer(factor(mydata$Siblings.Spouses.Aboa
 
 prop.table(table(mydata$Parents.Children.Aboard))
 
-# Análisis de variables numéricas:
+# An?lisis de variables num?ricas:
 summary(mydata$Age)
 hist(mydata$Age)
 boxplot(mydata$Age)
@@ -41,7 +41,7 @@ hist(mydata$Fare)
 boxplot(mydata$Fare)
 
 
-# Correlación de Pearson:
+# Correlaci?n de Pearson:
 var_num <- data.frame(mydata$Age, mydata$Fare)
 cor(var_num, method="pearson")
 # heat map:

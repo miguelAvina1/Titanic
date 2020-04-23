@@ -63,3 +63,5 @@ print(summary(train_data$Age))
 sprintf("Std dev: %s", round(sd(train_data$Age, na.rm = TRUE), digits = 4))
 boxplot(train_data$Age)
 hist(train_data$Age)
+plot(density(train_data$Age, na.rm = TRUE))
+
