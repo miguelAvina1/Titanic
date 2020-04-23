@@ -36,6 +36,12 @@ str(train_data)  # Brief string representation of the data
 library(dplyr)
 train_data <- select(train_data, -PassengerId, -Name, -Ticket, -Embarked)
 
+
+
+
+
+
+
 # Checking for missing data and storing the info.
 # Creating the empty table to store the info:
 missing_data <- matrix(data = 0, nrow = ncol(train_data), ncol = 3)
@@ -44,9 +50,9 @@ colnames(missing_data) <- c("Variable", "Occurrences", "Percentage")
 missing_data[1:8, 1] <- colnames(train_data)
 i <- 1
 for (column in train_data) {
-    missing_data[i, 2] <- sum(is.na(column))
-    missing_data[i, 3] <- round(mean(is.na(column))*100, digits = 2)  
-    i = i + 1
+  missing_data[i, 2] <- sum(is.na(column))
+  missing_data[i, 3] <- round(mean(is.na(column))*100, digits = 2)  
+  i = i + 1
 }
 row_sub = apply(missing_data, 1, function(row) all(row !=0 )) # Checkig for zeros in rows
 missing_data <- missing_data[row_sub,]                         # Subset to remove variables with complete data.
@@ -54,14 +60,81 @@ missing_data <- missing_data[row_sub,]                         # Subset to remov
 print("Missing data summary:")
 print(missing_data)
 
-# Numerical and graphical analysis to determine which decision to take regarding missing data.
-# Possible outcomes: a) Remove them. b) Substite them. c) Other
 
-# Possible analysis:  Summary() to get quartiles, mean, min, max and NA's. It removes NA for statistical data. 
-                    # Std deviation, histogram, boxplot
+
+# Analyzing 'Cabin' missing values #
+# Since there is over 75% of missing data for the Cabin variable, it would be better to continue without it,
+# However, we will check the percentage of ocurreces per level.
+train_data$Cabin <- as.factor(train_data$Cabin)   # Convert it to categorical
+sprintf("Cabin variable has %s levels", nlevels(train_data$Cabin))
+prop.table(table(train_data$Cabin))
+barplot(height = table(train_data$Cabin))
+# We can observe that there are 147 levels for 891 observations, we can also observe that it would be impossible to join
+# different levels to achive 10% in each of them since we don't have any information that will let us join them in a logical way.
+# Furthermore, graphically we can observe that most of the Cabins only have one onccurence.
+# Therefore, we will continue without this variable.
+train_data <- select(train_data, -Cabin) # Removing Cabin variable
+
+
+# Analyzing 'Age' missing values #
+# Numerical and graphical analysis to determine which decision to take regarding missing data.
+# Numerical Analysis
 print(summary(train_data$Age))
 sprintf("Std dev: %s", round(sd(train_data$Age, na.rm = TRUE), digits = 4))
-boxplot(train_data$Age)
+boxplot(train_data$Age, ylab = "Years", xlab = 'Age')
 hist(train_data$Age)
 plot(density(train_data$Age, na.rm = TRUE))
+
+# Verifying Age's correlation to the rest of the numerical variables
+# Creating a subset first using listwise deletion
+var_num <- data.frame(train_data$Age, train_data$Fare, train_data$SibSp, train_data$Parch)
+var_num_corr <- na.omit(var_num)
+cor(var_num_corr, method="pearson")
+library(reshape2)
+library(ggplot2)
+tmp <- melt(data.matrix(cor(var_num_corr)))
+ggplot(data=tmp, aes(x=Var1,y=Var2,fill=value)) + geom_tile()
+# With the previous analysis we can observe that there isn't correlation between Age and any other variable,
+# therefore, we can't remove it without losing important information. However, it is intersting to notice that
+# there is a small inverse relationship between age and number of siblings and spouses aboard.
+
+# We will now use stochastic regresion to fill missing values in 'Age'
+
+library("mice")
+library(dplyr, warn.conflicts = FALSE)
+
+var_num <- data.frame(train_data$Age, train_data$Fare)  # We will use just Fare for this regressiom
+
+imp <- mice(var_num, method = "norm.nob", m = 1, seed = 9)  # TODO: Research how to add min and max range to imputation by mice
+var_num_regr <- complete(imp)
+
+# Using mean imputation as reference for comparison
+var_num_mean <- var_num
+var_num_mean$train_data.Age[is.na(var_num_mean$train_data.Age)] <- median(var_num_mean$train_data.Age,na.rm=TRUE)
+# Comparing summaries
+summary(var_num_corr$train_data.Age) #  Original Age data, without NAs 
+round(sd(var_num_corr$train_data.Age, na.rm = TRUE), digits = 4)
+summary(var_num_regr$train_data.Age) #  Using regresion
+round(sd(var_num_regr$train_data.Age, na.rm = TRUE), digits = 4)
+summary(var_num_mean$train_data.Age) #  # Using mean imputation
+round(sd(var_num_mean$train_data.Age, na.rm = TRUE), digits = 4)
+
+# Graphical results
+plot(density(var_num_corr$train_data.Age))  # Original Age data, without NAs
+lines(density(var_num_regr$train_data.Age))  # Using regresion
+
+plot(density(var_num_mean$train_data.Age))  # Using mean imputation
+lines(density(var_num_corr$train_data.Age))  # Original Age data, without NAs
+
+# From now on, we will keep with Age filled with stochastic regression
+train_data$Age <- var_num_regr$train_data.Age
+
+
+# Before we continue, we will change the PClass and survived variables from numerical to categorical
+train_data$Survived <- ifelse(train_data$Survived==0, "Alive", "Dead")  # This changes int to char
+train_data$Survived <- as.factor(train_data$Survived) # Effectively converted variable to categorical
+
+train_data$Pclass <- as.factor(train_data$Pclass) 
+train_data$Sex <- as.factor(train_data$Sex)
+
 
