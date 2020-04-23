@@ -10,16 +10,16 @@ library(readr)
 train_data <- read_csv("data/train.csv")
 test_data  <- read_csv("data/test.csv")
 
-n_var = ncol(train_data)  # Getting number of variables (same as columns)
+n_var <- ncol(train_data)  # Getting number of variables (same as columns)
 sprintf("Number of variables of train data: %s", n_var)
 
-n_numeric = 0
-n_categorical = 0
+n_numeric <- 0
+n_categorical <- 0
 for (column in colnames(train_data)) {
   if (class(train_data[[column]]) == "numeric") {
-    n_numeric = n_numeric + 1
+    n_numeric <- n_numeric + 1
   } else {
-    n_categorical = n_categorical + 1
+    n_categorical <- n_categorical + 1
   }
 }
 sprintf("No. of categorical variables: %s", n_categorical)
@@ -38,19 +38,28 @@ train_data <- select(train_data, -PassengerId, -Name, -Ticket, -Embarked)
 
 # Checking for missing data and storing the info.
 # Creating the empty table to store the info:
-missing_data = matrix(data = 0, nrow = ncol(train_data), ncol = 3)
+missing_data <- matrix(data = 0, nrow = ncol(train_data), ncol = 3)
 colnames(missing_data) <- c("Variable", "Occurrences", "Percentage")
 
 missing_data[1:8, 1] <- colnames(train_data)
-i = 1
+i <- 1
 for (column in train_data) {
     missing_data[i, 2] <- sum(is.na(column))
     missing_data[i, 3] <- round(mean(is.na(column))*100, digits = 2)  
     i = i + 1
 }
 row_sub = apply(missing_data, 1, function(row) all(row !=0 )) # Checkig for zeros in rows
-missing_data = missing_data[row_sub,]                         # Subset
+missing_data <- missing_data[row_sub,]                         # Subset to remove variables with complete data.
 
 print("Missing data summary:")
 print(missing_data)
 
+# Numerical and graphical analysis to determine which decision to take regarding missing data.
+# Possible outcomes: a) Remove them. b) Substite them. c) Other
+
+# Possible analysis:  Summary() to get quartiles, mean, min, max and NA's. It removes NA for statistical data. 
+                    # Std deviation, histogram, boxplot
+print(summary(train_data$Age))
+sprintf("Std dev: %s", round(sd(train_data$Age, na.rm = TRUE), digits = 4))
+boxplot(train_data$Age)
+hist(train_data$Age)
