@@ -133,8 +133,55 @@ train_data$Age <- var_num_regr$train_data.Age
 # Before we continue, we will change the PClass and survived variables from numerical to categorical
 train_data$Survived <- ifelse(train_data$Survived==0, "Alive", "Dead")  # This changes int to char
 train_data$Survived <- as.factor(train_data$Survived) # Effectively converted variable to categorical
-
 train_data$Pclass <- as.factor(train_data$Pclass) 
 train_data$Sex <- as.factor(train_data$Sex)
+
+# We will verify distribution of data between categorical variable levels.
+prop.table(table(train_data$Survived))
+prop.table(table(train_data$Pclass))
+prop.table(table(train_data$Sex))
+# All previous variables have a good distribution of samples among their levels (>10% per level)
+
+# We will convert SibSP and Parch to categorical variables also
+train_data$SibSp <- as.factor(train_data$SibSp)
+train_data$Parch <- as.factor(train_data$Parch)
+prop.table(table(train_data$SibSp))
+prop.table(table(train_data$Parch))
+# Since some leves have under 10% of data in them, we will combine them as follows:
+train_data$SibSp <- factor(train_data$SibSp, labels=c("NoSbSp","HaveSbSp","HaveSbSp","HaveSbSp","HaveSbSp","HaveSbSp","HaveSbSp"))
+prop.table(table(train_data$SibSp))
+
+train_data$Parch <- factor(train_data$Parch, labels = c("NoParch","HaveParch","HaveParch","HaveParch","HaveParch","HaveParch","HaveParch"))
+prop.table(table(train_data$Parch))
+
+# Know we have finishing preprocesing our data
+data_A <- train_data                   # Data for model A
+data_B <- select(train_data, -Age)     # Data for model B
+
+# Dividing set in 80/20. Creating a random permutation
+sz <- dim(data_A)[1]          
+set.seed(6)
+q<-order(runif(sz))          
+mydata_raw <- data_A[q, ]    
+
+train_data_A <- mydata_raw[1:floor(0.80*sz), ]      # 80% Training set   
+test_data_A <- mydata_raw[(floor(0.80*sz)+1):(sz), ]
+# Verifying uniformity of proportions in each subset:
+prop.table(table(train_data_A$Survived))
+prop.table(table(test_data_A$Survived))
+prop.table(table(train_data$Survived))
+
+
+
+library(rpart.plot)
+
+fit <- rpart(Survived ~ ., data=train_data_A, method='class')
+rpart.plot(fit, extra=106)  # 106:binary; 104:multiclass
+
+# Predictions
+pred_test = predict(fit, test_data_A, type='class')
+
+table(test_data_A$Survived, pred_test)
+
 
 
