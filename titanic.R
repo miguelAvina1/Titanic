@@ -188,11 +188,11 @@ ggplot(data=tmp, aes(x=Var1,y=Var2,fill=value)) + geom_tile()
 
 library("timereg")
 
+# We will convert Fare to a categorical variable with 4 levels, based on the quartiles
 train_data$Fare = qcut(train_data$Fare, cuts = 4)
 
 
 
-# We will convert Fare to a categorical variable with 4 levels, based on the quartiles
 # Percentile_00  <- min(train_data$Fare)
 # Percentile_33  <- unname(quantile(train_data$Fare, 0.33333))
 # Percentile_67  <- unname(quantile(train_data$Fare, 0.66667))
@@ -226,10 +226,9 @@ train_data$Fare = qcut(train_data$Fare, cuts = 4)
 
 # END OF PREPROCESSING #
 
+# Obtainign a decision tree based using our model A
 data_A <- train_data                   # Data for model A
 data_B <- select(train_data, -Age)     # Data for model B
-
-
 
 # Dividing set in 80/20. Creating a random permutation
 sz <- dim(data_A)[1]          
@@ -240,33 +239,71 @@ mydata_raw <- data_A[q, ]
 train_data_A <- mydata_raw[1:floor(0.80*sz), ]      # 80% Training set   
 test_data_A <- mydata_raw[(floor(0.80*sz)+1):(sz), ]
 
-
 # Verifying uniformity of proportions in each subset:
 prop.table(table(train_data_A$Survived))
 prop.table(table(test_data_A$Survived))
 prop.table(table(train_data$Survived))
-
-
 
 # classification tree
 
 library(rpart.plot)
 
 fit <- rpart(Survived ~ ., data=train_data_A, method='class')
-# rpart.plot(fit, extra=106)  # 106:binary; 104:multiclass
 rpart.plot(fit, extra = 106)  # 106:binary; 104:multiclass
-
-
 
 
 # Predictions
 pred_test = predict(fit, test_data_A, type='class')
 
-table(test_data_A$Survived, pred_test)
-
-
+# Generating confusion matrix and other stats
 library(caret)
 confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference"))
+
+
+
+# Repeating 5 times previous process, with different seeds, storing the outputs of each iteration
+
+seeds_i <- c(10, 33, 50, 89, 100)  # seed 6 was used in first example before the 5 iterations
+
+trees_A <- list()
+matrices_A <- list()
+
+trees_A <- vector("list", length(seeds_i)) 
+matrices_A <- vector("list", length(seeds))
+
+trees_A[[1]] = fit
+
+for (seed in seeds_i){
+
+  set.seed(seed)
+  q<-order(runif(sz))          
+  mydata_raw <- data_A[q, ]    
+  
+  train_data_A <- mydata_raw[1:floor(0.80*sz), ]      # 80% Training set   
+  test_data_A <- mydata_raw[(floor(0.80*sz)+1):(sz), ]
+  
+  fit <- rpart(Survived ~ ., data=train_data_A, method='class')
+  trees_A <- list(trees_A, fit)    # Saving the result of this iteration
+  rpart.plot(fit, extra = 106)  # 106:binary; 104:multiclass
+  
+  pred_test = predict(fit, test_data_A, type='class')
+  confMatrix <- confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference"))
+  
+  matrices_A <- c(matrices_A, confMatrix) # Saving the result of this iteration
+
+}
+
+
+
+
+
+
+
+
+
+
+# set.seed(6). Seeds user for each of the HW iterations: {6, 10, 33, 50, 89, 100}
+
 
 
 
