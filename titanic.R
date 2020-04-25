@@ -260,19 +260,15 @@ library(caret)
 confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference"))
 
 
-
+############################
 # Repeating 5 times previous process, with different seeds, storing the outputs of each iteration
 
-seeds_i <- c(10, 33, 50, 89, 100)  # seed 6 was used in first example before the 5 iterations
+seeds_i <- c(10, 33, 50, 89, 100)  # seed 6 was used in first example before theese 5 iterations
 
-trees_A <- list()
-matrices_A <- list()
+trees <- vector("list", length(seeds_i))    # Empty list were we are going to save info for each iteration
+matrices <- vector("list", length(seeds_i))   # Empty list were we are going to save info for each iteration
 
-trees_A <- vector("list", length(seeds_i)) 
-matrices_A <- vector("list", length(seeds))
-
-trees_A[[1]] = fit
-
+index <- 1
 for (seed in seeds_i){
 
   set.seed(seed)
@@ -282,22 +278,34 @@ for (seed in seeds_i){
   train_data_A <- mydata_raw[1:floor(0.80*sz), ]      # 80% Training set   
   test_data_A <- mydata_raw[(floor(0.80*sz)+1):(sz), ]
   
-  fit <- rpart(Survived ~ ., data=train_data_A, method='class')
-  trees_A <- list(trees_A, fit)    # Saving the result of this iteration
+  trees[[index]] <- rpart(Survived ~ ., data=train_data_A, method='class')   # Saving the result of this iteration
   rpart.plot(fit, extra = 106)  # 106:binary; 104:multiclass
   
   pred_test = predict(fit, test_data_A, type='class')
-  confMatrix <- confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference"))
+  matrices[[index]] <- confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference")) # Saving the result of this iteration
   
-  matrices_A <- c(matrices_A, confMatrix) # Saving the result of this iteration
 
+  index <- index + 1
 }
 
+# trees and matrices are lists of five lists, we can access each list by trees[1] (info from 1st iteratioon) and matrices[3] conf.matrix from 3rd iteration
+# Getting average confusion matrix
+VP <- 0
+FN <- 0
+FP <- 0
+VN <- 0
+for (matrix in matrices) {   # Meaning of table's indexes: 1:VP; 2:FN; 3:FP; 4:VN
+  VP <- VP + matrix$table[1]
+  FN <- FN + matrix$table[2]
+  FP <- FP + matrix$table[3]
+  VN <- VN + matrix$table[4]
+}
+VP <- round(VP/length(seeds_i))
+FN <- round(FN/length(seeds_i))
+FP <- round(FP/length(seeds_i))
+VN <- round(VN/length(seeds_i))
 
-
-
-
-
+print(matrix(c(VP, FN, FP, VN), nrow=2, dimnames = list(c("Alive", "Dead"), c("Alive", "Dead"))))
 
 
 
