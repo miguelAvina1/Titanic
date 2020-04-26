@@ -234,10 +234,10 @@ data_B <- select(train_data, -Age)     # Data for model B
 sz <- dim(data_A)[1]          
 set.seed(6)
 q<-order(runif(sz))          
-mydata_raw <- data_A[q, ]    
+mydata_raw_A <- data_A[q, ]    
 
-train_data_A <- mydata_raw[1:floor(0.80*sz), ]      # 80% Training set   
-test_data_A <- mydata_raw[(floor(0.80*sz)+1):(sz), ]
+train_data_A <- mydata_raw_A[1:floor(0.70*sz), ]      # 80% Training set   
+test_data_A <- mydata_raw_A[(floor(0.70*sz)+1):(sz), ]
 
 # Verifying uniformity of proportions in each subset:
 prop.table(table(train_data_A$Survived))
@@ -248,16 +248,16 @@ prop.table(table(train_data$Survived))
 
 library(rpart.plot)
 
-fit <- rpart(Survived ~ ., data=train_data_A, method='class')
-rpart.plot(fit, extra = 106)  # 106:binary; 104:multiclass
+fit_A <- rpart(Survived ~ ., data=train_data_A, method='class')
+rpart.plot(fit_A, extra = 106)  # 106:binary; 104:multiclass
 
 
 # Predictions
-pred_test = predict(fit, test_data_A, type='class')
+pred_test_A = predict(fit, test_data_A, type='class')
 
 # Generating confusion matrix and other stats
 library(caret)
-confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference"))
+confusionMatrix(pred_test_A, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference"))
 
 
 ############################
@@ -265,24 +265,23 @@ confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Predi
 
 seeds_i <- c(10, 33, 50, 89, 100)  # seed 6 was used in first example before theese 5 iterations
 
-trees <- vector("list", length(seeds_i))    # Empty list were we are going to save info for each iteration
-matrices <- vector("list", length(seeds_i))   # Empty list were we are going to save info for each iteration
+trees_A <- vector("list", length(seeds_i))    # Empty list were we are going to save info for each iteration
+matrices_A <- vector("list", length(seeds_i))   # Empty list were we are going to save info for each iteration
 
 index <- 1
 for (seed in seeds_i){
-
   set.seed(seed)
   q<-order(runif(sz))          
-  mydata_raw <- data_A[q, ]    
+  mydata_raw_A <- data_A[q, ]    
   
-  train_data_A <- mydata_raw[1:floor(0.80*sz), ]      # 80% Training set   
-  test_data_A <- mydata_raw[(floor(0.80*sz)+1):(sz), ]
+  train_data_A <- mydata_raw_A[1:floor(0.70*sz), ]      # 80% Training set   
+  test_data_A <- mydata_raw_A[(floor(0.70*sz)+1):(sz), ]
   
-  trees[[index]] <- rpart(Survived ~ ., data=train_data_A, method='class')   # Saving the result of this iteration
-  rpart.plot(fit, extra = 106)  # 106:binary; 104:multiclass
+  trees_A[[index]] <- rpart(Survived ~ ., data=train_data_A, method='class')   # Saving the result of this iteration
+  rpart.plot(fit_A, extra = 106)  # 106:binary; 104:multiclass
   
-  pred_test = predict(fit, test_data_A, type='class')
-  matrices[[index]] <- confusionMatrix(pred_test, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference")) # Saving the result of this iteration
+  pred_test = predict(fit_A, test_data_A, type='class')
+  matrices_A[[index]] <- confusionMatrix(pred_test_A, test_data_A$Survived, positive = NULL, dnn = c("Prediction", "Reference")) # Saving the result of this iteration
   
 
   index <- index + 1
@@ -294,7 +293,7 @@ VP <- 0
 FN <- 0
 FP <- 0
 VN <- 0
-for (matrix in matrices) {   # Meaning of table's indexes: 1:VP; 2:FN; 3:FP; 4:VN
+for (matrix in matrices_A) {   # Meaning of table's indexes: 1:VP; 2:FN; 3:FP; 4:VN
   VP <- VP + matrix$table[1]
   FN <- FN + matrix$table[2]
   FP <- FP + matrix$table[3]
@@ -312,6 +311,81 @@ print(matrix(c(VP, FN, FP, VN), nrow=2, dimnames = list(c("Alive", "Dead"), c("A
 
 # set.seed(6). Seeds user for each of the HW iterations: {6, 10, 33, 50, 89, 100}
 
+# Dividing set in 80/20. Creating a random permutation
+sz <- dim(data_B)[1]          
+set.seed(6)
+q<-order(runif(sz))          
+mydata_raw_B <- data_B[q, ]    
+
+train_data_B <- mydata_raw_B[1:floor(0.60*sz), ]      # 80% Training set   
+test_data_B <- mydata_raw_B[(floor(0.60*sz)+1):(sz), ]
+
+# Verifying uniformity of proportions in each subset:
+prop.table(table(train_data_B$Survived))
+prop.table(table(test_data_B$Survived))
+prop.table(table(train_data$Survived))
+
+# classification tree
+
+library(rpart.plot)
+
+fit_B <- rpart(Survived ~ ., data=train_data_B, method='class')
+rpart.plot(fit_B, extra = 106)  # 106:binary; 104:multiclass
+
+
+# Predictions
+pred_test_B = predict(fit_B, test_data_B, type='class')
+
+# Generating confusion matrix and other stats
+library(caret)
+confusionMatrix(pred_test_B, test_data_B$Survived, positive = NULL, dnn = c("Prediction", "Reference"))
+
+
+############################
+# Repeating 5 times previous process, with different seeds, storing the outputs of each iteration
+
+seeds_i <- c(10, 33, 50, 89, 100)  # seed 6 was used in first example before theese 5 iterations
+
+trees_B <- vector("list", length(seeds_i))    # Empty list were we are going to save info for each iteration
+matrices_B <- vector("list", length(seeds_i))   # Empty list were we are going to save info for each iteration
+
+index <- 1
+for (seed in seeds_i){
+  set.seed(seed)
+  q<-order(runif(sz))          
+  mydata_raw_B <- data_B[q, ]    
+  
+  train_data_B <- mydata_raw_B[1:floor(0.60*sz), ]      # 80% Training set   
+  test_data_B <- mydata_raw_B[(floor(0.60*sz)+1):(sz), ]
+  
+  trees_B[[index]] <- rpart(Survived ~ ., data=train_data_B, method='class')   # Saving the result of this iteration
+  rpart.plot(fit_B, extra = 106)  # 106:binary; 104:multiclass
+  
+  pred_test_B = predict(fit_B, test_data_B, type='class')
+  matrices_B[[index]] <- confusionMatrix(pred_test_B, test_data_B$Survived, positive = NULL, dnn = c("Prediction", "Reference")) # Saving the result of this iteration
+  
+  
+  index <- index + 1
+}
+
+# trees and matrices are lists of five lists, we can access each list by trees[1] (info from 1st iteratioon) and matrices[3] conf.matrix from 3rd iteration
+# Getting average confusion matrix
+VP <- 0
+FN <- 0
+FP <- 0
+VN <- 0
+for (matrix in matrices_B) {   # Meaning of table's indexes: 1:VP; 2:FN; 3:FP; 4:VN
+  VP <- VP + matrix$table[1]
+  FN <- FN + matrix$table[2]
+  FP <- FP + matrix$table[3]
+  VN <- VN + matrix$table[4]
+}
+VP <- round(VP/length(seeds_i))
+FN <- round(FN/length(seeds_i))
+FP <- round(FP/length(seeds_i))
+VN <- round(VN/length(seeds_i))
+
+print(matrix(c(VP, FN, FP, VN), nrow=2, dimnames = list(c("Alive", "Dead"), c("Alive", "Dead"))))
 
 
 
