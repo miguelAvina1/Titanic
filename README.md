@@ -1,13 +1,22 @@
-# TC4000.1 | Inteligent Systems. Titanic Homework
+# TC4000.1 | Intelligent Systems. Titanic Homework
 
 This repository contains the titanic assignment for the postgraduate-level
-course *IA4000.1 Inteligent Systems* taught at Tecnológico de Monterrey Campus
+course *IA4000.1 Intelligent Systems* taught at Tecnológico de Monterrey Campus
 Guadalajara by Ph.D. Luis Eduardo Falcón Morales.
 
 ### Prerequisites ###
 
 * R
-*
+
+### Overview ###
+
+This project analyzes the [data](https://www.kaggle.com/c/titanic/data) from
+the Kaggle challenge named "Titanic". The purpose of the activity is to learn
+how to preprocess datasets and handle missing data.
+
+The project follows the steps described in the [Instructions](https://github.com/miguelAvina1/Titanic/blob/master/Instructions/Tarea_Titanic.pdf)
+ provided. Titanic.R is the resulting script, which in some parts is heavily
+ based on example_Titanic.R, a reference material provided by the professor of the course.
 
 * * *
 
